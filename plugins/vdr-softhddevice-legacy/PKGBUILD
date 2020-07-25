@@ -1,0 +1,90 @@
+# This PKGBUILD is part of the VDR4Arch project [https://github.com/vdr4arch]
+
+# Maintainer: Christopher Reimer <mail+vdr4arch[at]c-reimer[dot]de>
+pkgname=vdr-softhddevice-legacy
+pkgver=0.6.1rc1.r65.g6dfa88a
+_gitver=6dfa88aecf1b5a4c5932ba278209d9f22676547f
+_ffmpegver=2.8.17
+_vdrapi=2.4.7
+pkgrel=4
+pkgdesc='Software and GPU emulated HD output device plugin for VDR and older Nvidia graphics which do not support libglvnd'
+url='http://projects.vdr-developer.org/projects/plg-softhddevice'
+arch=('x86_64' 'i686')
+license=('AGPL3')
+depends=('alsa-lib' 'libvdpau' 'libxxf86vm' "vdr-api=${_vdrapi}" 'xcb-util-wm' 'xorg-server')
+optdepends=('nvidia-340xx: Required for VDPAU decoding',
+            'vdr-xorg: Recommended way to start X.org server together with VDR')
+makedepends=('git' 'glu')
+provides=('vdr-softhddevice')
+conflicts=('vdr-skindesigner' 'vdr-softhddevice')
+source=("git://projects.vdr-developer.org/vdr-plugin-softhddevice.git#commit=${_gitver}"
+        "https://ffmpeg.org/releases/ffmpeg-${_ffmpegver}.tar.xz"
+        '50-softhddevice.conf')
+backup=('etc/vdr/conf.avail/50-softhddevice.conf')
+sha256sums=('SKIP'
+            'd0734fec613fe12bee0b5a84f917779b854c1ede7882793f618490e6bbf0c148'
+            '67bb0c168042b27ead3f62a98f9b434d0164da5fe334a76ccc5dd061932d1952')
+
+pkgver() {
+  cd "${srcdir}/vdr-plugin-softhddevice"
+  git describe --tags --abbrev=7 | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/v//'
+}
+
+prepare() {
+  cd "${srcdir}/vdr-plugin-softhddevice"
+
+  # Disable OSS. Arch Linux doesn't ship OSS
+  sed -i '/OSS /d' Makefile
+
+  # Enable this to increase AV_INFO logging
+  #sed -i 's/3000/500/g' Makefile
+
+  # Enable this to compile with debug logging
+  #sed -i 's/# -DDEBUG/-DDEBUG/g' Makefile
+}
+
+build() {
+  cd "${srcdir}/ffmpeg-${_ffmpegver}"
+  ./configure \
+    --disable-everything \
+    --disable-programs \
+    --disable-doc \
+    --disable-stripping \
+    --disable-yasm \
+    --disable-asm \
+    --prefix="${srcdir}/ffmpeg-static" \
+    --enable-static \
+    --disable-shared \
+    --enable-pic \
+    --enable-gpl \
+    --enable-version3 \
+    --enable-hwaccel=h263_vdpau \
+    --enable-hwaccel=h264_vdpau \
+    --enable-hwaccel=mpeg1_vdpau \
+    --enable-hwaccel=mpeg2_vdpau \
+    --enable-hwaccel=mpeg4_vdpau \
+    --enable-hwaccel=wmv3_vdpau \
+    --enable-hwaccel=hevc_vdpau \
+    --enable-decoder=h264_vdpau \
+    --enable-decoder=mpeg1_vdpau \
+    --enable-decoder=mpeg_vdpau \
+    --enable-decoder=mpeg4_vdpau \
+    --enable-decoder=mpeg2video \
+    --enable-decoder=wmv3_vdpau \
+    --enable-decoder=aac \
+    --enable-decoder=ac3 \
+    --enable-decoder=eac3 \
+    --enable-decoder=mp2
+  make
+  make install
+
+  cd "${srcdir}/vdr-plugin-softhddevice"
+  PKG_CONFIG_PATH="${srcdir}/ffmpeg-static/lib/pkgconfig" make
+}
+
+package() {
+  cd "${srcdir}/vdr-plugin-softhddevice"
+  PKG_CONFIG_PATH="${srcdir}/ffmpeg-static/lib/pkgconfig" make DESTDIR="${pkgdir}" install
+
+  install -Dm644 "$srcdir/50-softhddevice.conf" "$pkgdir/etc/vdr/conf.avail/50-softhddevice.conf"
+}
