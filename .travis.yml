@@ -19,38 +19,95 @@ env:
   global:
     - LANG=en_US.UTF-8
     - REPO_MAKE_CACHE=$HOME/cache
-    - REPO_MAKE_TARGET=$HOME/repo
     - REPO_MAKE_PKGBUILDS=$TRAVIS_BUILD_DIR
 
+stages:
+  - download
+  - build
+  - upload
+
 jobs:
-  - env: REPO_MAKE_ARCH=x86_64 REPO_MAKE_MAKEPKG_CONF=./.ci/makepkg.conf
-    arch: amd64
-  - env: REPO_MAKE_ARCH=armv6h REPO_MAKE_MAKEPKG_CONF=./.ci/makepkg-armv6h.conf
-    arch: arm64
-  - env: REPO_MAKE_ARCH=armv7h REPO_MAKE_MAKEPKG_CONF=./.ci/makepkg-armv7h.conf
-    arch: arm64
+  include:
+    - stage: download
+      name: Download current repo state
+      script:
+        - git clone https://github.com/$TRAVIS_REPO_SLUG.git --branch gh-pages --single-branch $HOME/repo || true
+        - rm -rf $HOME/repo/.git
+      workspaces:
+        create:
+          name: repo
+          paths:
+            - $HOME/repo/
 
-before_script:
-  - ./.ci/setup_arm_build.sh
-  - sudo locale-gen en_US.UTF-8
-  - sudo update-locale LANG=en_US.UTF-8
-  - git clone https://github.com/VDR4Arch/$REPO_MAKE_ARCH.git --branch master --single-branch $HOME/repo || true
-  - rm -rf $HOME/repo/.git
+    - stage: build
+      name: Build x86_64 packages
+      env: REPO_MAKE_ARCH=x86_64 REPO_MAKE_MAKEPKG_CONF=./.ci/makepkg.conf REPO_MAKE_TARGET=$HOME/repo/x86_64
+      arch: amd64
+      workspaces:
+        use:
+          - repo
+        create:
+          name: x86_64
+          paths: $HOME/repo/x86_64
+      script:
+        - sudo locale-gen en_US.UTF-8
+        - sudo update-locale LANG=en_US.UTF-8
+        - sudo ./.ci/repo-make-ci.sh
 
-script:
-  - sudo ./.ci/repo-make-ci.sh
+    - stage: build
+      name: Build armv6h packages
+      env: REPO_MAKE_ARCH=armv6h REPO_MAKE_MAKEPKG_CONF=./.ci/makepkg-armv6h.conf REPO_MAKE_TARGET=$HOME/repo/armv6h
+      arch: arm64
+      workspaces:
+        use:
+          - repo
+        create:
+          name: armv6h
+          paths: $HOME/repo/armv6h
+      script:
+        - sudo locale-gen en_US.UTF-8
+        - sudo update-locale LANG=en_US.UTF-8
+        - sudo dpkg --add-architecture armhf
+        - sudo apt-get update
+        - sudo apt-get install crossbuild-essential-armhf
+        - cat repo-make-arm.conf > repo-make.conf
+        - sudo ./.ci/repo-make-ci.sh
 
-before_deploy:
-  - sudo chown -R $USER:$USER $HOME/repo
-  - ./.ci/genindex.sh $HOME/repo $REPONAME
+    - stage: build
+      name: Build armv7h packages
+      env: REPO_MAKE_ARCH=armv7h REPO_MAKE_MAKEPKG_CONF=./.ci/makepkg-armv7h.conf REPO_MAKE_TARGET=$HOME/repo/armv7h
+      arch: arm64
+      workspaces:
+        use:
+          - repo
+        create:
+          name: armv7h
+          paths: $HOME/repo/armv7h
+      script:
+        - sudo locale-gen en_US.UTF-8
+        - sudo update-locale LANG=en_US.UTF-8
+        - sudo dpkg --add-architecture armhf
+        - sudo apt-get update
+        - sudo apt-get install crossbuild-essential-armhf
+        - cat repo-make-arm.conf > repo-make.conf
+        - sudo ./.ci/repo-make-ci.sh
 
-deploy:
-  provider: pages
-  token: $GITHUB_TOKEN
-  skip_cleanup: true
-  local_dir: $HOME/repo/
-  repo: VDR4Arch/$REPO_MAKE_ARCH
-  target_branch: master
-  on:
-    repo: $TRAVIS_REPO_SLUG
-    branch: master
+    - stage: upload
+      name: Upload repository
+      workspaces:
+        use:
+          - x86_64
+          - armv6h
+          - armv7h
+      before_deploy:
+        - sudo chown -R $USER:$USER $HOME/repo
+        - ./.ci/genindex.sh $HOME/repo $(basename $TRAVIS_REPO_SLUG)
+      deploy:
+        provider: pages
+        token: $GITHUB_TOKEN
+        skip_cleanup: true
+        local_dir: $HOME/repo/
+        strategy: git
+        on:
+          repo: $TRAVIS_REPO_SLUG
+          branch: tmn505
