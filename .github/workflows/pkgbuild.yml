@@ -1,0 +1,188 @@
+name: VDR4Arch-CI
+
+on:
+  push:
+    branches: [ tmn505 ]
+  pull_request:
+    branches: [ tmn505 ]
+  workflow_dispatch:
+
+jobs:
+  x86_64:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+
+    steps:
+      - name: Check out repository
+        run: |
+          cd ..
+          git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git
+
+      - name: Prepare
+        run: |
+          sudo locale-gen en_US.UTF-8
+          sudo update-locale LANG=en_US.UTF-8
+          sudo apt-get update
+          sudo apt-get -y install libarchive-tools
+          git clone --depth 1 --branch gh-pages $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git $GITHUB_WORKSPACE/repo || true
+
+      - name: Restore cache
+        uses: actions/cache/restore@v5
+        with:
+          path: repo/${{ github.job }}
+          key: ${{ github.job }}
+
+      - name: Build artifacts
+        run: |
+          export REPO_MAKE_PKGBUILDS=$GITHUB_WORKSPACE
+          export REPO_MAKE_ARCH=${{ github.job }}
+          export REPO_MAKE_TARGET=$GITHUB_WORKSPACE/repo/$REPO_MAKE_ARCH
+          sudo -E ./.ci/repo-make-ci.sh
+          sudo rm -f -R $GITHUB_WORKSPACE/repo/.git
+
+      - name: Save cache
+        uses: actions/cache/save@v5
+        with:
+          path: repo/${{ github.job }}
+          key: ${{ github.job }}-${{ github.run_id }}
+
+  armv7h:
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+
+    steps:
+      - name: Check out repository
+        run: |
+          cd ..
+          git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git
+
+      - name: Prepare
+        run: |
+          sudo locale-gen en_US.UTF-8
+          sudo update-locale LANG=en_US.UTF-8
+          sudo apt-get update
+          sudo apt-get -y install libarchive-tools
+          git clone --depth 1 --branch gh-pages $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git $GITHUB_WORKSPACE/repo || true
+
+      - name: Restore cache
+        uses: actions/cache/restore@v5
+        with:
+          path: repo/${{ github.job }}
+          key: ${{ github.job }}
+
+      - name: Build artifacts
+        run: |
+          export REPO_MAKE_PKGBUILDS=$GITHUB_WORKSPACE
+          export REPO_MAKE_ARCH=${{ github.job }}
+          export REPO_MAKE_TARGET=$GITHUB_WORKSPACE/repo/$REPO_MAKE_ARCH
+          sudo -E ./.ci/repo-make-ci.sh
+          sudo rm -f -R $GITHUB_WORKSPACE/repo/.git
+
+      - name: Save cache
+        uses: actions/cache/save@v5
+        with:
+          path: repo/${{ github.job }}
+          key: ${{ github.job }}-${{ github.run_id }}
+
+  aarch64:
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+
+    steps:
+      - name: Check out repository
+        run: |
+          cd ..
+          git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git
+
+      - name: Prepare
+        run: |
+          sudo locale-gen en_US.UTF-8
+          sudo update-locale LANG=en_US.UTF-8
+          sudo apt-get update
+          sudo apt-get -y install libarchive-tools
+          git clone --depth 1 --branch gh-pages $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git $GITHUB_WORKSPACE/repo || true
+
+      - name: Restore cache
+        uses: actions/cache/restore@v5
+        with:
+          path: repo/${{ github.job }}
+          key: ${{ github.job }}
+
+      - name: Build artifacts
+        run: |
+          export REPO_MAKE_PKGBUILDS=$GITHUB_WORKSPACE
+          export REPO_MAKE_ARCH=${{ github.job }}
+          export REPO_MAKE_TARGET=$GITHUB_WORKSPACE/repo/$REPO_MAKE_ARCH
+          sudo -E ./.ci/repo-make-ci.sh
+          sudo rm -f -R $GITHUB_WORKSPACE/repo/.git
+
+      - name: Save cache
+        uses: actions/cache/save@v5
+        with:
+          path: repo/${{ github.job }}
+          key: ${{ github.job }}-${{ github.run_id }}
+
+  publish:
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    needs: [ aarch64, armv7h, x86_64 ]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
+      - name: Prepare tree
+        run: |
+          git clone --depth 1 --branch gh-pages $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git $GITHUB_WORKSPACE/repo
+          mkdir -p $GITHUB_WORKSPACE/repo/armv7h $GITHUB_WORKSPACE/repo/x86_64
+
+      - name: Restore x86_64 cache
+        uses: actions/cache/restore@v5
+        with:
+          path: repo/x86_64
+          key: x86_64
+
+      - name: Restore armv7h cache
+        uses: actions/cache/restore@v5
+        with:
+          path: repo/armv7h
+          key: armv7h
+
+      - name: Restore aarch64 cache
+        uses: actions/cache/restore@v5
+        with:
+          path: repo/aarch64
+          key: aarch64
+
+      - name: Publish built artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo chown -R $USER $GITHUB_WORKSPACE/repo
+          curl -L -O https://github.com/tmn505/vdr4arch/raw/tmn505/.ci/genindex.sh
+          chmod +x $GITHUB_WORKSPACE/genindex.sh
+          $GITHUB_WORKSPACE/genindex.sh $GITHUB_WORKSPACE/repo $(basename $GITHUB_REPOSITORY)
+
+          cd $GITHUB_WORKSPACE/repo
+          git update-ref -d HEAD
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Publish $GITHUB_REPOSITORY/$GITHUB_RUN_ID/$GITHUB_RUN_NUMBER"
+          git push -f https://$GITHUB_REPOSITORY_OWNER:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git gh-pages
+
+      - name: Delete old cache
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          keylist=$(gh cache list --json key --jq '.[].key')
+          for k in $keylist; do
+            if [[ "$k" != *-${GITHUB_RUN_ID} ]]; then
+              gh cache delete "$k"
+              sleep 0.2
+            fi
+          done
