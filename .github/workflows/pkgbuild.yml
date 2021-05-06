@@ -1,0 +1,48 @@
+name: VDR4Arch-CI
+
+on:
+  push:
+    branches: [ tmn505 ]
+  pull_request:
+    branches: [ tmn505 ]
+  workflow_dispatch:
+
+jobs:
+  main:
+    name: CI/CD
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Prepare
+        run: |
+          sudo locale-gen en_US.UTF-8
+          sudo update-locale LANG=en_US.UTF-8
+          git clone --depth 1 --branch gh-pages $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git $HOME/repo || true
+
+      - name: Build artifacts
+        run: |
+          export REPO_MAKE_PKGBUILDS=$GITHUB_WORKSPACE
+          export REPO_MAKE_ARCH=x86_64
+          export REPO_MAKE_MAKEPKG_CONF=$GITHUB_WORKSPACE/.ci/makepkg.conf
+          export REPO_MAKE_TARGET=$HOME/repo/$REPO_MAKE_ARCH
+          sudo -E ./.ci/repo-make-ci.sh
+          sudo chown -R $USER $HOME/repo
+          ./.ci/genindex.sh $HOME/repo $(basename $GITHUB_REPOSITORY)
+
+      - name: Publish built artifacts
+        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd $HOME/repo
+          git update-ref -d HEAD
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Publish $GITHUB_REPOSITORY/$GITHUB_RUN_ID/$GITHUB_RUN_NUMBER"
+          git push -f https://$GITHUB_REPOSITORY_OWNER:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git gh-pages
