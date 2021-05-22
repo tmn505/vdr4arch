@@ -6,7 +6,7 @@ pkgver=2.2.5
 epoch=1
 _gitver=cd1f00caa271c02641a13c541afaa9b3c0d695c1
 _vdrapi=2.4.7
-pkgrel=4
+pkgrel=5
 pkgdesc="A bridge between VDR and OScam."
 url="https://github.com/manio/vdr-plugin-dvbapi"
 arch=('x86_64' 'i686')
@@ -14,13 +14,20 @@ license=('GPL2')
 depends=('gcc-libs' 'libdvbcsa' 'openssl' "vdr-api=${_vdrapi}")
 makedepends=('git')
 _plugname=${pkgname//vdr-/}
-source=("git+${url}.git#commit=${_gitver}")
+source=("git+${url}.git#commit=${_gitver}"
+        "${pkgname}-Improved-socket-handling.patch::https://github.com/pipelka/vdr-plugin-dvbapi/commit/b6599c133c6efc0fd28ca6f25f90fb6484bd7532.patch")
 backup=("etc/vdr/conf.avail/50-$_plugname.conf")
-sha256sums=('SKIP')
+sha256sums=('SKIP'
+            'cdf7262d8c7e329688aa6880719e0b422f0075bd7999fac3522d01d14e2c7fb6')
 
 pkgver() {
   cd "${srcdir}/vdr-plugin-${_plugname}"
   git describe --tags | sed 's/-/_/g;s/v//'
+}
+
+prepare() {
+  cd "${srcdir}/vdr-plugin-${_plugname}"
+  patch -p1 -i "${srcdir}/${pkgname}-Improved-socket-handling.patch"
 }
 
 build() {
