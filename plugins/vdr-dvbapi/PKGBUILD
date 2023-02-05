@@ -12,9 +12,16 @@ arch=('x86_64' 'i686')
 license=('GPL2')
 depends=('gcc-libs' 'libdvbcsa' 'openssl' "vdr-api=${_vdrapi}")
 _plugname=${pkgname//vdr-/}
-source=("vdr-plugin-${_plugname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+source=("vdr-plugin-${_plugname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
+        "${pkgname}-Improved-socket-handling.patch::https://github.com/pipelka/vdr-plugin-dvbapi/commit/b6599c133c6efc0fd28ca6f25f90fb6484bd7532.patch")
 backup=("etc/vdr/conf.avail/50-$_plugname.conf")
-sha256sums=('dba435f6d9172189de4059d796d9020109997d51370e49ec0398d40ef8e08f69')
+sha256sums=('dba435f6d9172189de4059d796d9020109997d51370e49ec0398d40ef8e08f69'
+            'cdf7262d8c7e329688aa6880719e0b422f0075bd7999fac3522d01d14e2c7fb6')
+
+prepare() {
+  cd "${srcdir}/vdr-plugin-${_plugname}-${pkgver}"
+  patch -p1 -i ${srcdir}/${pkgname}-Improved-socket-handling.patch
+}
 
 build() {
   cd "${srcdir}/vdr-plugin-${_plugname}-${pkgver}"

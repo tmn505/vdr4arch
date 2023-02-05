@@ -13,6 +13,8 @@ pkgbase = vdr-dvbapi
 	depends = vdr-api=13
 	backup = etc/vdr/conf.avail/50-dvbapi.conf
 	source = vdr-plugin-dvbapi-2.2.6.tar.gz::https://github.com/manio/vdr-plugin-dvbapi/archive/refs/tags/v2.2.6.tar.gz
+	source = vdr-dvbapi-Improved-socket-handling.patch::https://github.com/pipelka/vdr-plugin-dvbapi/commit/b6599c133c6efc0fd28ca6f25f90fb6484bd7532.patch
 	sha256sums = dba435f6d9172189de4059d796d9020109997d51370e49ec0398d40ef8e08f69
+	sha256sums = cdf7262d8c7e329688aa6880719e0b422f0075bd7999fac3522d01d14e2c7fb6
 
 pkgname = vdr-dvbapi
