@@ -2,12 +2,12 @@
 
 # Maintainer: Christopher Reimer <mail+vdr4arch[at]c-reimer[dot]de>
 pkgname=oscam
-pkgver=11769
-_gitver=a1cd3e668f20e917e56e9e3aff5d3d994fd7d8ab
+pkgver=11965
+_gitver=dd70372565c1d5ac1d41a8d38cc21c5a12615041
 pkgrel=1
 pkgdesc="Open Source Conditional Access Module software"
 url='https://wiki.streamboard.tv/wiki/OSCam'
-arch=('x86_64' 'i686' 'arm' 'armv6h' 'armv7h')
+arch=('x86_64' 'i686' 'arm' 'armv6h' 'armv7h' 'aarch64')
 license=('GPL-3.0-or-later')
 depends=('libusb' 'openssl' 'pcsclite')
 makedepends=('git')
@@ -16,20 +16,19 @@ install='oscam.install'
 source=("git+https://git.streamboard.tv/common/oscam.git#commit=${_gitver}"
         'oscam.service'
         'oscam.sysuser')
-sha256sums=('cccf3024f5a085cba3ba4953501a20947faad532b54c92b9694aa5a66871a953'
+sha256sums=('a0c48847308721b76c565e713a52ad9c02158240a31a6f0a466797239b629639'
             'ad08ee6fc95909b8b9f10c804a8158901383548c27720cf863a868114f45887f'
             '3adbbfa4f388c6510b365719da251360dee9cc2885c5f82e06d56c246fcd26b0')
 
 pkgver() {
   cd "$srcdir/$pkgname"
-  ./config.sh --oscam-revision
+  git describe
 }
 
 build() {
   cd "$srcdir/$pkgname"
 
   ./config.sh --enable \
-              WITH_SSL \
               IPV6SUPPORT \
               CARDREADER_SMARGO
 

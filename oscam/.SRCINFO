@@ -1,6 +1,6 @@
 pkgbase = oscam
 	pkgdesc = Open Source Conditional Access Module software
-	pkgver = 11769
+	pkgver = 11965
 	pkgrel = 1
 	url = https://wiki.streamboard.tv/wiki/OSCam
 	install = oscam.install
@@ -9,16 +9,17 @@ pkgbase = oscam
 	arch = arm
 	arch = armv6h
 	arch = armv7h
+	arch = aarch64
 	license = GPL-3.0-or-later
 	makedepends = git
 	depends = libusb
 	depends = openssl
 	depends = pcsclite
 	optdepends = ccid: PC/SC reader generic driver
-	source = git+https://git.streamboard.tv/common/oscam.git#commit=a1cd3e668f20e917e56e9e3aff5d3d994fd7d8ab
+	source = git+https://git.streamboard.tv/common/oscam.git#commit=dd70372565c1d5ac1d41a8d38cc21c5a12615041
 	source = oscam.service
 	source = oscam.sysuser
-	sha256sums = cccf3024f5a085cba3ba4953501a20947faad532b54c92b9694aa5a66871a953
+	sha256sums = a0c48847308721b76c565e713a52ad9c02158240a31a6f0a466797239b629639
 	sha256sums = ad08ee6fc95909b8b9f10c804a8158901383548c27720cf863a868114f45887f
 	sha256sums = 3adbbfa4f388c6510b365719da251360dee9cc2885c5f82e06d56c246fcd26b0
 
