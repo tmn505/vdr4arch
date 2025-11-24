@@ -12,8 +12,12 @@ makedepends=('ffmpeg' 'freeglut' 'glew' 'mesa' "vdr-api=${_vdrapi}" 'xcb-util-wm
 makedepends_x86_64=( 'NVIDIA-MODULE' )
 _plugname=${pkgbase//vdr-/}
 source=("${pkgbase}-${pkgver}.tar.gz::${url}/archive/refs/tags/V${pkgver}.tar.gz"
+        "${pkgbase}-fix-libavcodec-version-condition.patch"
+        "${pkgbase}-relax-flags-for-gcc15.patch"
         "50-$_plugname.conf")
 sha256sums=('58ef80bee0c87baf865c364c6f3617cab21a8d1594dc0e3a3b7e55e187816d44'
+            'e01590f4621673e5cf4872a9f9c100ad7d1c9642885ebfcf0347be44e7f9c3bc'
+            '9d4419ed3465fea5d4f380e5b3c2e3e903b2174ec35944aeb4c9c5b4323f2c07'
             'ad30dd72260a25663e8ea46ca941c4d55d11fef7b936791cdf51de4fd91cb3af')
 
 if [ "$CARCH" == "x86_64" ] ; then
@@ -22,6 +26,8 @@ fi
 
 prepare() {
   cd "${srcdir}/vdr-plugin-${_plugname}-${pkgver}"
+  patch -p1 -i "${srcdir}/${pkgbase}-fix-libavcodec-version-condition.patch"
+  patch -p1 -i "${srcdir}/${pkgbase}-relax-flags-for-gcc15.patch"
 
   # Disable OSS. Arch Linux doesn't ship OSS
   sed -i '/OSS /d' Makefile
@@ -33,11 +39,14 @@ prepare() {
 build() {
   cd "${srcdir}/vdr-plugin-${_plugname}-${pkgver}"
   if [ "$CARCH" == "x86_64" ] ; then
+    msg2 "Building softhdcuvid plugin"
     make CUVID=1 LIBPLACEBO=1 libvdr-softhdcuvid.so
     make clean
+    msg2 "Building softhdvaapi plugin"
     make VAAPI=1 LIBPLACEBO_GL=1 libvdr-softhdvaapi.so
     make clean
   fi
+  msg2 "Building softhddrm plugin"
   make DRM=1 LIBPLACEBO=0 libvdr-softhddrm.so
   make clean
 }

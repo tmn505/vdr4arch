@@ -20,10 +20,16 @@ pkgbase = vdr-softhdcuvid
 	makedepends = ffnvcodec-headers
 	makedepends = freetype2
 	source = vdr-softhdcuvid-3.35.tar.gz::https://github.com/jojo61/vdr-plugin-softhdcuvid/archive/refs/tags/V3.35.tar.gz
+	source = vdr-softhdcuvid-change-compiler-flags-for-cuvid-compile.patch::https://github.com/jojo61/vdr-plugin-softhdcuvid/commit/c866670227a0c9da986479d106d3764feb213042.patch
+	source = vdr-softhdcuvid-fix-libavcodec-version-condition.patch
+	source = vdr-softhdcuvid-relax-flags-for-gcc15.patch
 	source = 50-softhdcuvid.conf
 	sha256sums = 58ef80bee0c87baf865c364c6f3617cab21a8d1594dc0e3a3b7e55e187816d44
+	sha256sums = d418c2f1dbffbb39ae5afc99a388c956d92287045de173399661d2bbd649aef5
+	sha256sums = e01590f4621673e5cf4872a9f9c100ad7d1c9642885ebfcf0347be44e7f9c3bc
+	sha256sums = 9d4419ed3465fea5d4f380e5b3c2e3e903b2174ec35944aeb4c9c5b4323f2c07
 	sha256sums = ad30dd72260a25663e8ea46ca941c4d55d11fef7b936791cdf51de4fd91cb3af
-	makedepends_x86_64 = nvidia>=410.48
+	makedepends_x86_64 = NVIDIA-MODULE
 
 pkgname = vdr-softhddrm
 	arch = x86_64
@@ -50,7 +56,7 @@ pkgname = vdr-softhdcuvid
 	depends = vdr-api=11
 	depends = xcb-util-wm
 	depends = xorg-server
-	depends = nvidia>=410.48
+	depends = NVIDIA-MODULE
 	depends = glu
 	depends = libavcodec.so
 	depends = libavutil.so

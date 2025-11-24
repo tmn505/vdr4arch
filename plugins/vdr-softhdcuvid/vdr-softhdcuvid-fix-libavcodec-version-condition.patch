@@ -1,0 +1,11 @@
+--- a/video.c
++++ b/video.c
+@@ -2915,7 +2915,7 @@ static enum AVPixelFormat Cuvid_get_format(CuvidDecoder *decoder, AVCodecContext
+             bitformat16 = 1;
+     }
+ #ifdef VAAPI
+-#if (LIBAVCODEC_VERSION_INT > AV_VERSION_INT(62, 11, 100))
++#if (LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(62, 11, 100))
+     if (video_ctx->profile == AV_PROFILE_HEVC_MAIN_10)
+ #else
+     if (video_ctx->profile == FF_PROFILE_HEVC_MAIN_10)

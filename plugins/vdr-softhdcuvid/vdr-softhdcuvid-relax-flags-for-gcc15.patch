@@ -1,0 +1,20 @@
+--- a/Makefile
++++ b/Makefile
+@@ -113,7 +113,7 @@ TMPDIR ?= /tmp
+ 
+ ### The compiler options:
+ 
+-export CFLAGS	= $(call PKGCFG,cflags) 
++export CFLAGS	= $(call PKGCFG,cflags) -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-implicit-function-declaration 
+ export CXXFLAGS = $(call PKGCFG,cxxflags) 
+ 
+ ifeq ($(CFLAGS),)
+@@ -178,7 +178,7 @@ LIBS += $(shell pkg-config --libs egl gbm libdrm)
+ endif
+ 
+ ifeq ($(CUVID),1)
+-export CFLAGS	= $(call PKGCFG,cflags) -fpermissive
++export CFLAGS	= $(call PKGCFG,cflags) -fpermissive -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-implicit-function-declaration
+ export CXXFLAGS = $(call PKGCFG,cxxflags) -fpermissive
+ #CONFIG += -DUSE_PIP			# PIP support
+ CONFIG += -DCUVID			# enable CUVID decoder
