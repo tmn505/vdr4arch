@@ -24,8 +24,10 @@ pkgbase = vdr-softhddevice
 	optdepends = vdr-xorg: Recommended way to start X.org server together with VDR
 	backup = etc/vdr/conf.avail/50-softhddevice.conf
 	source = vdr-softhddevice-2.4.8.tar.gz::https://github.com/ua0lnj/vdr-plugin-softhddevice/archive/v2.4.8.tar.gz
+	source = vdr-softhddevice-downgrade-some-surface-errors.patch
 	source = 50-softhddevice.conf
 	sha256sums = d37336a0a6ce1da89476a19ec7416591dda7bb3d0fd5a457435b5a6baf1fdbd1
+	sha256sums = d6ba216d967a4a9397fc232b98c721988999737c640ddd2042be6f1dc454bd0c
 	sha256sums = 889d4c19770a926f8aa6a014ff8219800a7a74c464ef0b12dcef6bb8db93e719
 
 pkgname = vdr-softhddevice

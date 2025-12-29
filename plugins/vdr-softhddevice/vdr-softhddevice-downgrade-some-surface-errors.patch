@@ -1,0 +1,28 @@
+--- a/video.c
++++ b/video.c
+@@ -2658,14 +2658,14 @@ static void VaapiDestroySurfaces(VaapiDecoder * decoder)
+     if (vaDestroySurfaces(decoder->VaDisplay, decoder->SurfacesFree,
+ 	    decoder->SurfaceFreeN)
+ 	!= VA_STATUS_SUCCESS) {
+-	Error(_("video/vaapi: can't destroy %d surfaces\n"),
++	Warning(_("video/vaapi: can't destroy %d surfaces\n"),
+ 	    decoder->SurfaceFreeN);
+     }
+     decoder->SurfaceFreeN = 0;
+     if (vaDestroySurfaces(decoder->VaDisplay, decoder->SurfacesUsed,
+ 	    decoder->SurfaceUsedN)
+ 	!= VA_STATUS_SUCCESS) {
+-	Error(_("video/vaapi: can't destroy %d surfaces\n"),
++	Warning(_("video/vaapi: can't destroy %d surfaces\n"),
+ 	    decoder->SurfaceUsedN);
+     }
+     decoder->SurfaceUsedN = 0;
+@@ -3829,7 +3829,7 @@ static VAStatus VaapiPostprocessSurface(VAContextID ctx,
+     for (i = 0; i < *num_frefs; ++i) {
+         va_status = vaQuerySurfaceStatus(VaDisplay, frefs[i], &va_surf_status);
+         if (va_status != VA_STATUS_SUCCESS) {
+-            Error("Surface %d query status = 0x%X: %s\n", i, va_status, vaErrorStr(va_status));
++            Warning("Surface %d query status = 0x%X: %s\n", i, va_status, vaErrorStr(va_status));
+             return va_status;
+         }
+         if (va_surf_status != VASurfaceReady) {
